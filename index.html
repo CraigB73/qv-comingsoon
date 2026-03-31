@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src https://formsubmit.co; form-action 'self'; base-uri 'self'; frame-ancestors 'none';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; form-action 'self'; base-uri 'self'; frame-ancestors 'none';" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="turnstile-site-key" content="YOUR_TURNSTILE_SITE_KEY">
   <title>Quote Vector</title>
   <link rel="stylesheet" href="styles.css">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
 
@@ -217,6 +219,13 @@ testa och forma plattformen."></p>
                     data-se-ph="Största utmaningen med offerter?"
                     placeholder="Biggest quoting challenge?"></textarea>
           <div class="field-counter" id="messageCounter" aria-live="polite">0 / 500</div>
+        </div>
+
+        <div class="field turnstile-field">
+          <div class="cf-turnstile"
+               data-sitekey="YOUR_TURNSTILE_SITE_KEY"
+               data-theme="dark"
+               data-size="flexible"></div>
         </div>
 
         <div id="form-error" class="form-error hidden"></div>

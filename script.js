@@ -37,6 +37,8 @@ function t(key) {
     en: {
       "error.required": "Please fill in all required fields.",
       "error.email": "Please enter a valid email address.",
+      "error.turnstile": "Please complete the verification step.",
+      "error.config": "Turnstile is not configured yet. Add your site key before going live.",
       "error.send": "Something went wrong. Please try again.",
       "sending": "Sending...",
       "submit": "Apply for Early Access"
@@ -44,6 +46,8 @@ function t(key) {
     sv: {
       "error.required": "Vänligen fyll i alla obligatoriska fält.",
       "error.email": "Vänligen ange en giltig e-postadress.",
+      "error.turnstile": "Vänligen slutför verifieringen.",
+      "error.config": "Turnstile är inte konfigurerat ännu. Lägg till din site key innan lansering.",
       "error.send": "Något gick fel. Försök igen.",
       "sending": "Skickar...",
       "submit": "Ansök om tidig tillgång"
@@ -59,12 +63,19 @@ function initForm() {
   var form = document.getElementById("enquiry-form");
   if (!form) return;
 
+  var siteKeyMeta = document.querySelector('meta[name="turnstile-site-key"]');
   var successEl = document.getElementById("form-success");
   var errorEl = document.getElementById("form-error");
   var submitBtn = document.getElementById("submitBtn");
   var messageEl = document.getElementById("message");
   var messageCounter = document.getElementById("messageCounter");
+  var turnstileWidget = form.querySelector(".cf-turnstile");
   var submitting = false;
+  var turnstileSiteKey = siteKeyMeta ? siteKeyMeta.getAttribute("content") : "";
+
+  if (turnstileWidget) {
+    turnstileWidget.setAttribute("data-sitekey", turnstileSiteKey || "");
+  }
 
   function updateMessageCounter() {
     if (!messageEl || !messageCounter) return;
@@ -99,13 +110,23 @@ function initForm() {
       return;
     }
 
+    if (!turnstileSiteKey || turnstileSiteKey === "YOUR_TURNSTILE_SITE_KEY") {
+      showError(t("error.config"));
+      return;
+    }
+
+    if (!form.elements["cf-turnstile-response"] || !form.elements["cf-turnstile-response"].value) {
+      showError(t("error.turnstile"));
+      return;
+    }
+
     submitting = true;
     submitBtn.textContent = t("sending");
     submitBtn.disabled = true;
 
     var formData = new FormData(form);
 
-    fetch("https://formsubmit.co/ajax/info@quotevector.com", {
+    fetch("/api/enquiry", {
       method: "POST",
       headers: { "Accept": "application/json" },
       body: formData
@@ -116,7 +137,11 @@ function initForm() {
         successEl.classList.remove("hidden");
       } else {
         resetSubmit();
-        showError(t("error.send"));
+        res.json().then(function (data) {
+          showError((data && data.error) || t("error.send"));
+        }).catch(function () {
+          showError(t("error.send"));
+        });
       }
     })
     .catch(function () {
@@ -129,6 +154,9 @@ function initForm() {
     submitBtn.textContent = t("submit");
     submitBtn.disabled = false;
     submitting = false;
+    if (window.turnstile && typeof window.turnstile.reset === "function" && turnstileWidget) {
+      window.turnstile.reset(turnstileWidget);
+    }
   }
 
   function showError(msg) {

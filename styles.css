@@ -97,12 +97,12 @@ button {
 
 .access-bg {
   background-image: url("assets/MiddleImage.png");
-  background-position: center calc(50% - 50px);
+  background-position: center calc(50% - 54px);
 }
 
 .comparison-bg {
   background-image: url("assets/BottomImage.png");
-  background-position: calc(50% - 50px) calc(50% + 60px);
+  background-position: calc(50% - 50px) calc(50% + 85px);
 }
 
 .header {
@@ -369,6 +369,8 @@ button {
 }
 
 .access-text {
+  display: flex;
+  flex-direction: column;
   max-width: 360px;
 }
 
@@ -473,6 +475,16 @@ button {
   text-align: right;
 }
 
+.turnstile-field {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.turnstile-field .cf-turnstile {
+  width: 100%;
+}
+
 .field input::placeholder,
 .field textarea::placeholder,
 .field select {
@@ -547,7 +559,7 @@ button {
 }
 
 .comparison {
-  min-height: 460px;
+  min-height: 540px;
 }
 
 /* SECTION OVERLAY */
@@ -583,8 +595,10 @@ button {
   min-height: inherit;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
-  padding: 18px 16px 12px;
+  gap: 0;
+  padding: 56px 16px 24px;
   text-align: center;
 }
 
@@ -607,7 +621,7 @@ button {
   display: grid;
   grid-template-columns: 1fr;
   margin: 0 auto;
-  width: min(100%, 944px);
+  width: min(92vw, 944px);
   overflow: visible;
   transform: translateX(0);
   border-radius: 10px;
@@ -629,13 +643,15 @@ button {
 .card {
   position: relative;
   z-index: 1;
-  padding: 16px 16px 18px;
+  padding: clamp(14px, 1.5vw, 18px) clamp(14px, 1.7vw, 18px) clamp(16px, 1.8vw, 20px);
   text-align: left;
 }
 
 /* REMOVE OLD BORDER */
 .card-before {
   border: none;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
   background:
     linear-gradient(135deg, rgba(34, 42, 63, 0.17) 0%, rgba(20, 28, 43, 0.14) 58%, rgba(13, 18, 30, 0.08) 100%);
   backdrop-filter: blur(8px) saturate(118%);
@@ -643,6 +659,9 @@ button {
 }
 
 .card-after {
+  border-left: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
   background: rgba(12, 18, 30, 0.02);
 }
 
@@ -662,18 +681,20 @@ button {
   inset: 0;
   border-radius: inherit;
   box-shadow:
-    inset 1px 0 0 rgba(255, 255, 255, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.03),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.03),
-    inset -18px 0 32px rgba(58, 236, 204, 0.04);
+    inset 0 -1px 0 rgba(255, 255, 255, 0.03);
   pointer-events: none;
+}
+
+.card-after {
+  border-right: 0;
 }
 
 /* TITLE */
 .card h3 {
   margin: 0 0 10px;
   color: #f7f8fd;
-  font-size: 1.02rem;
+  font-size: clamp(0.98rem, 1.05vw, 1.08rem);
   font-weight: 700;
 }
 
@@ -685,25 +706,25 @@ button {
   margin-bottom: 9px;
 
   color: #cfd4e3;
-  font-size: 0.88rem;
+  font-size: clamp(0.84rem, 0.95vw, 0.96rem);
 }
 
 /* ICON STYLING */
 .x-icon {
   color: #ff5d5d;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: clamp(0.94rem, 1vw, 1.06rem);
 }
 
 .check-green {
   color: #22c55e;
-  font-size: 1rem;
+  font-size: clamp(0.94rem, 1vw, 1.06rem);
 }
 
 .plus-icon {
   color: #9ca3af;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: clamp(0.94rem, 1vw, 1.06rem);
 }
 
 .plus-item span:last-child {
@@ -725,15 +746,17 @@ button {
 .footer-tagline {
   margin: 0 0 1px;
   color: #f4f5fb;
-  font-size: 1.14rem;
+  font-size: clamp(1.14rem, 2vw, 1.42rem);
   font-weight: 800;
+  line-height: 1.15;
 }
 
 .footer-sub {
   margin: 0 0 12px;
   color: #d4d8e7;
-  font-size: 0.78rem;
+  font-size: clamp(0.78rem, 1.2vw, 0.96rem);
   font-weight: 600;
+  line-height: 1.25;
 }
 
 .footer-bottom {
@@ -751,9 +774,11 @@ button {
   align-items: center;
   gap: 8px;
   color: rgba(222, 226, 236, 0.72);
-  font-size: 0.605rem;
+  font-size: clamp(0.605rem, 0.9vw, 0.76rem);
   text-align: center;
   justify-content: center;
+  line-height: 1.35;
+  max-width: min(100%, 72ch);
 }
 
 .footer-icon {
@@ -864,6 +889,7 @@ button {
   }
 
   .hero-buttons {
+    width: 100%;
     margin-top: auto;
     padding-top: 28px;
     align-items: center;
@@ -872,22 +898,31 @@ button {
 
   .hero-scroll-indicator {
     display: inline-flex;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .access-top {
-    grid-template-columns: minmax(0, 1fr) 402px;
-    gap: 36px;
+    grid-template-columns: minmax(0, 1fr) clamp(340px, 42vw, 402px);
+    gap: clamp(28px, 4vw, 36px);
+    justify-content: space-between;
+    align-items: center;
     padding-top: 76px;
     padding-bottom: 72px;
   }
 
   .access-text {
-    max-width: 390px;
+    max-width: min(100%, 420px);
+    min-width: 0;
+    justify-self: start;
     padding-top: 6px;
   }
 
   .access-text h2 {
-    font-size: 2.35rem;
+    max-width: 12ch;
+    font-size: clamp(2rem, 4.1vw, 2.35rem);
+    white-space: normal;
+    text-wrap: balance;
   }
 
   .access-desc {
@@ -899,16 +934,20 @@ button {
   }
 
   .form-card {
+    width: 100%;
+    max-width: 402px;
+    min-width: 0;
+    justify-self: end;
     padding: 18px 18px 20px;
   }
 
   .comparison-bg {
-    background-position: calc(50% - 50px) calc(50% + 60px);
+    background-position: calc(50% - 50px) calc(50% + 85px);
   }
 
   .comparison-inner {
-    padding-top: 24px;
-    padding-bottom: 56px;
+    padding-top: 72px;
+    padding-bottom: 72px;
   }
 
   .comparison h2 {
@@ -942,13 +981,13 @@ button {
 
   .comparison-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    width: min(100%, 800px);
+    width: min(86vw, 820px);
     transform: translateX(-14px);
+    align-self: center;
   }
 
   .card {
-    min-height: 114px;
-    padding: 16px 16px 18px;
+    min-height: clamp(118px, 14vw, 134px);
   }
 
   .card-before {
@@ -986,42 +1025,49 @@ button {
 }
 
 @media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
-  .hero-buttons {
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    margin-left: 0;
+  .access-top {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding-top: 32px;
+    padding-bottom: 36px;
   }
 
-  .btn-primary {
+  .access-text {
+    max-width: 100%;
+    padding-top: 0;
+  }
+
+  .access-text h2,
+  .access-desc {
+    text-align: center;
+  }
+
+  .access-desc {
+    max-width: 36ch;
     margin-left: auto;
     margin-right: auto;
   }
 
-  .hero-scroll-indicator {
-    display: flex;
+  .access-benefits {
+    max-width: max-content;
     margin-left: auto;
     margin-right: auto;
+  }
+
+  .form-card {
+    width: min(100%, 520px);
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .access-bg {
+    background-position: center calc(50% - 20px);
   }
 }
 
 @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
-  .hero-buttons {
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    margin-left: 0;
-  }
-
-  .btn-primary {
-    margin-left: auto;
-    margin-right: auto;
-  }
-
   .hero-scroll-indicator {
-    display: inline-flex;
-    margin-left: auto;
-    margin-right: auto;
     margin-top: 18px;
   }
 }
@@ -1057,18 +1103,13 @@ button {
   }
 
   .hero-buttons {
-    width: 100%;
     margin-top: auto;
     padding-top: 12px;
-    align-items: center;
-    justify-content: center;
   }
 
   .btn-primary {
     width: min(100%, 280px);
     min-height: 40px;
-    margin-left: auto;
-    margin-right: auto;
   }
 
   .hero-scroll-indicator {
@@ -1084,7 +1125,7 @@ button {
   }
 }
 /* MOBILE STACK */
-@media (max-width: 768px) and (orientation: portrait) {
+@media (max-width: 480px) and (orientation: portrait) {
   .hero-buttons {
     padding-top: calc(clamp(18px, 4vw, 36px) + 10px);
   }
@@ -1242,6 +1283,63 @@ button {
     background-size: calc(100% + 50px) calc(100% + 50px);
   }
 
+  .access-top {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+    gap: 18px;
+    padding-top: 28px;
+    padding-bottom: 28px;
+  }
+
+  .access-text {
+    max-width: 100%;
+    padding-top: 0;
+  }
+
+  .access-text h2 {
+    font-size: clamp(1.35rem, 3vw, 1.85rem);
+    white-space: nowrap;
+  }
+
+  .access-desc {
+    max-width: 34ch;
+    font-size: 0.82rem;
+  }
+
+  .access-benefits {
+    gap: 8px;
+  }
+
+  .access-benefits li {
+    font-size: 0.82rem;
+  }
+
+  .form-card {
+    width: min(100%, 340px);
+    max-width: 340px;
+    justify-self: end;
+    padding: 12px 12px 14px;
+  }
+
+  .form-card h3 {
+    font-size: 0.9rem;
+  }
+
+  .field,
+  .field-row {
+    margin-bottom: 6px;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    height: 34px;
+    font-size: 0.7rem;
+  }
+
+  .field textarea {
+    min-height: 52px;
+  }
+
   .hero-bg {
     background-position: right calc(50% - 105px);
   }
@@ -1264,14 +1362,10 @@ button {
   .hero-buttons {
     padding-top: 10px;
     margin-top: 0;
-    align-items: center;
-    justify-content: center;
   }
 
   .btn-primary {
     min-height: calc(clamp(50px, 12vw, 58px) - 15px);
-    margin-left: auto;
-    margin-right: auto;
   }
 
   .hero-scroll-arrow {
@@ -1339,13 +1433,76 @@ button {
     font-size: 1.4rem;
   }
 
+  .comparison-bg {
+    background-position: center calc(50% + 25px);
+    background-size: cover;
+  }
+
   .comparison-cards {
-    width: min(100%, 824px);
-    transform: translateX(-16px);
+    width: min(82vw, 860px);
+    transform: translateX(-12px);
   }
 
   .comparison {
-    min-height: 500px;
+    min-height: 580px;
+  }
+}
+
+@media (min-width: 1120px) {
+  .access-top {
+    max-width: 1120px;
+    grid-template-columns: minmax(0, 1fr) clamp(420px, 41vw, 465px);
+    gap: 54px;
+    padding-top: 68px;
+    padding-bottom: 64px;
+    align-items: start;
+  }
+
+  .access-text {
+    max-width: 470px;
+    padding-top: 8px;
+    justify-self: start;
+  }
+
+  .access-text h2 {
+    font-size: clamp(2.2rem, 3vw, 2.85rem);
+  }
+
+  .access-desc {
+    max-width: 34ch;
+  }
+
+  .form-card {
+    width: 100%;
+    max-width: 465px;
+    justify-self: end;
+    padding: 20px 20px 22px;
+  }
+
+  .access-bg {
+    background-position: center calc(50% - 100px);
+  }
+
+  .comparison-inner {
+    padding-top: 84px;
+    padding-bottom: 78px;
+  }
+
+  .comparison h2 {
+    font-size: 1.52rem;
+  }
+
+  .comparison-sub {
+    font-size: 0.96rem;
+  }
+
+  .comparison-cards {
+    width: min(78vw, 940px);
+    transform: translateX(-12px);
+  }
+
+  .card {
+    min-height: clamp(126px, 12vw, 146px);
   }
 }
 
