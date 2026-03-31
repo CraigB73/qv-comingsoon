@@ -1,196 +1,315 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src https://formsubmit.co; form-action 'self'; base-uri 'self'; frame-ancestors 'none';" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>Quote Vector</title>
-
-  <style>
-    :root {
-      --bg: #0f172a;
-      --card: #111827;
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-      --accent: #22c55e;
-      --accent-hover: #16a34a;
-    }
-
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 2rem;
-    }
-
-    header {
-      text-align: center;
-      padding: 4rem 1rem;
-    }
-
-    h1 {
-      font-size: 2.8rem;
-      margin-bottom: 1rem;
-    }
-
-    .subtitle {
-      color: var(--muted);
-      font-size: 1.2rem;
-      max-width: 700px;
-      margin: 0 auto;
-    }
-
-    .cta {
-      margin-top: 2rem;
-    }
-
-    .btn {
-      background: var(--accent);
-      color: #000;
-      padding: 0.9rem 1.6rem;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .btn:hover {
-      background: var(--accent-hover);
-    }
-
-    section {
-      margin-top: 4rem;
-    }
-    .sub-header {
-      text-align: center;
-    }
-    .grid {
-      display: grid;
-      gap: 1.5rem;
-    }
-
-    @media(min-width: 768px) {
-      .grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
-
-    .card {
-      background: var(--card);
-      padding: 1.5rem;
-      border-radius: 10px;
-    }
-
-    .card h3 {
-      margin-top: 0;
-    }
-
-    footer {
-      text-align: center;
-      margin-top: 4rem;
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
 
-  <div class="container">
-
-    <!-- HERO -->
-    <header>
-      <div style="margin-top:2rem; box-shadow:0 10px 30px rgba(0,0,0,0.4); border-radius:12px; overflow:hidden;">
-          <img src="/images/logo.png" alt="Quote Vector preview" style="width:25%;" />
-      </div>
-      <h1>Quoting made simple</h1>
-      <p class="subtitle">
-        Quote Vector helps tradespeople and contractors create accurate quotes faster — using your own supplier pricing and AI-powered document reading.
-      </p>
-
-      <div class="cta">
-        <a  class="btn">Coming Soon</a>
-      </div>
-    </header>
-
-    <!-- FEATURES -->
-    <section>
-      <div class="grid">
-
-        <div class="card">
-          <h3>Use your own supplier pricing</h3>
-          <p>
-            Keep your supplier price lists private and always up to date. When prices change, your quotes update automatically.
-          </p>
-        </div>
-
-        <div class="card">
-          <h3>Build quotes faster</h3>
-          <p>
-            Search materials, add quantities, and let AI read drawings, PDFs, or spreadsheets to generate your quote.
-          </p>
-        </div>
-
-        <div class="card">
-          <h3>Send and track instantly</h3>
-          <p>
-            Send quotes to customers with a secure link. Get notified when they accept, request changes, or decline.
-          </p>
-        </div>
-
-      </div>
-    </section>
-<section>
-  <h2 class="sub-header">Built for work on the go</h2>
-
-  <p class="subtitle">
-    Whether you're on-site, in the van, or between jobs — create, adjust, and send quotes without slowing down.
-  </p>
-
-  <div class="grid" style="margin-top:2rem;">
-
-    <div class="card">
-      <h3>Quote from anywhere</h3>
-      <p>
-        Open a job, check materials, and build a quote right from your phone — no office needed.
-      </p>
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-left">
+      <img src="assets/logo.png" alt="Quote Vector" class="header-logo">
+      <span class="header-brand">QUOTE VECTOR</span>
     </div>
+    <button id="langToggle" class="lang-toggle" aria-label="Toggle language" aria-pressed="false">
+      <span class="lang-slider" aria-hidden="true"></span>
+      <span class="lang-option lang-option-en">EN</span>
+      <span class="lang-option lang-option-se">SV</span>
+    </button>
+  </div>
+</header>
 
-    <div class="card">
-      <h3>Turn drawings into quotes</h3>
-      <p>
-        Upload a photo, PDF, or plan and let AI do the heavy lifting while you're still on site.
-      </p>
+<!-- HERO -->
+<section class="hero section-bg hero-bg">
+  <div class="hero-content content-wrap">
+    <div class="hero-text">
+      <h1 data-en="Create accurate quotes in minutes — not hours."
+          data-se="Skapa exakta offerter på minuter — inte timmar."></h1>
+      <p data-en="Built for tradespeople who are tired of spreadsheets, guesswork, and underpricing jobs."
+         data-se="Byggt för hantverkare som är trötta på kalkylblad, gissningar och felprissatta jobb."></p>
+      <div class="hero-buttons">
+        <a href="#register" class="btn-primary"
+           data-en="Get Early Access"
+           data-se="Få tidig tillgång"></a>
+      </div>
+      <a href="#register" class="hero-scroll-indicator" aria-label="Scroll down">
+        <span class="hero-scroll-arrow" aria-hidden="true"></span>
+      </a>
     </div>
-
-    <div class="card">
-      <h3>Send before you leave</h3>
-      <p>
-        Finish the job, send the quote, and get customer feedback before you even get back in the van.
-      </p>
-    </div>
-
   </div>
 </section>
-   
-    <!-- TRUST / INFRA -->
-    <section>
-      <h2 class="sub-header">Built for reliability</h2>
-      <p class="subtitle" style="text-align:left; margin-top:1rem;">
-        Each company’s data is securely isolated. The platform is powered by modern cloud infrastructure and AI designed to keep costs low and performance high.
-      </p>
-    </section>
 
-    <!-- FOOTER -->
-    <footer>
-      © 2026 Quote Vector. All rights reserved.
-    </footer>
+<!-- EARLY ACCESS / FORM -->
+<section class="access section-bg access-bg" id="register">
+  <div class="access-top content-wrap">
+    <div class="access-text">
+      <h2 data-en="Get early access to Quote Vector"
+          data-se="Få tidig tillgång till Quote Vector"></h2>
+      <p class="access-desc"
+         data-en="We're onboarding a small group of trade businesses to
+test and shape the platform."
+         data-se="Vi tar in en liten grupp hantverksföretag för att
+testa och forma plattformen."></p>
+      <ul class="access-benefits">
+        <li>
+          <span class="check-icon">&#10004;</span>
+          <span data-en="Get free access during testing"
+                data-se="Gratis tillgång under testperioden"></span>
+        </li>
+        <li>
+          <span class="check-icon">&#10004;</span>
+          <span data-en="Help shape features for your workflow"
+                data-se="Hjälp forma funktioner för ditt arbetsflöde"></span>
+        </li>
+        <li>
+          <span class="check-icon">&#10004;</span>
+          <span data-en="Lock in early pricing"
+                data-se="Säkra tidig prissättning"></span>
+        </li>
+      </ul>
+    </div>
 
+    <div class="form-card" id="form-card">
+      <h3 data-en="Apply for Pilot Access"
+          data-se="Ansök om pilotåtkomst"></h3>
+
+      <form id="enquiry-form" novalidate>
+        <input type="hidden" name="_captcha" value="false">
+        <input type="hidden" name="_subject" value="New QuoteVector Interest">
+        <input type="text" name="_honey" class="visually-hidden-field" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+        <div class="field">
+          <input type="text" id="name" name="name" required autocomplete="name"
+                 data-en-ph="Name"
+                 data-se-ph="Namn"
+                 placeholder="Name">
+        </div>
+
+        <div class="field">
+          <input type="text" id="company" name="company" autocomplete="organization"
+                 data-en-ph="Company Name"
+                 data-se-ph="Företagsnamn"
+                 placeholder="Company Name">
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <select id="companyType" name="companyType" required>
+              <option value="" disabled selected
+                      data-en="Trade"
+                      data-se="Bransch">Trade</option>
+              <option value="Electrical"
+                      data-en="Electrical"
+                      data-se="El">Electrical</option>
+              <option value="Plumbing"
+                      data-en="Plumbing"
+                      data-se="VVS">Plumbing</option>
+              <option value="HVAC"
+                      data-en="HVAC"
+                      data-se="Ventilation">HVAC</option>
+              <option value="General Construction"
+                      data-en="General Construction"
+                      data-se="Bygg allmänt">General Construction</option>
+              <option value="Painting"
+                      data-en="Painting"
+                      data-se="Måleri">Painting</option>
+              <option value="Roofing"
+                      data-en="Roofing"
+                      data-se="Tak">Roofing</option>
+              <option value="Carpentry"
+                      data-en="Carpentry"
+                      data-se="Snickeri">Carpentry</option>
+              <option value="Landscaping"
+                      data-en="Landscaping"
+                      data-se="Markarbete">Landscaping</option>
+              <option value="Other"
+                      data-en="Other"
+                      data-se="Övrigt">Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <select id="builderType" name="builderType" required>
+              <option value="" disabled selected
+                      data-en="Builder"
+                      data-se="Byggare">Builder</option>
+              <option value="Sole Trader"
+                      data-en="Sole Trader"
+                      data-se="Enskild firma">Sole Trader</option>
+              <option value="Small Team"
+                      data-en="Small Team"
+                      data-se="Litet team">Small Team</option>
+              <option value="Growing Company"
+                      data-en="Growing Company"
+                      data-se="Växande företag">Growing Company</option>
+              <option value="Enterprise"
+                      data-en="Enterprise"
+                      data-se="Större bolag">Enterprise</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <input type="email" id="email" name="email" required autocomplete="email"
+                   data-en-ph="Email"
+                   data-se-ph="E-postadress"
+                   placeholder="Email">
+          </div>
+          <div class="field">
+            <input type="tel" id="phone" name="phone" autocomplete="tel"
+                   data-en-ph="Phone (optional)"
+                   data-se-ph="Telefon (valfritt)"
+                   placeholder="Phone (optional)">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <select id="quotesPerMonth" name="quotesPerMonth">
+              <option value="" disabled selected
+                      data-en="Quotes per month"
+                      data-se="Offerter per månad">Quotes per month</option>
+              <option value="1-10"
+                      data-en="1-10"
+                      data-se="1-10">1-10</option>
+              <option value="11-25"
+                      data-en="11-25"
+                      data-se="11-25">11-25</option>
+              <option value="26-50"
+                      data-en="26-50"
+                      data-se="26-50">26-50</option>
+              <option value="50+"
+                      data-en="50+"
+                      data-se="50+">50+</option>
+            </select>
+          </div>
+          <div class="field">
+            <select id="companySize" name="companySize">
+              <option value="50+" selected
+                      data-en="50+"
+                      data-se="50+">50+</option>
+              <option value="1-5"
+                      data-en="1-5"
+                      data-se="1-5">1-5</option>
+              <option value="6-20"
+                      data-en="6-20"
+                      data-se="6-20">6-20</option>
+              <option value="21-50"
+                      data-en="21-50"
+                      data-se="21-50">21-50</option>
+              <option value="50+"
+                      data-en="50+"
+                      data-se="50+">50+</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <textarea id="message" name="message" rows="2"
+                    maxlength="500"
+                    data-en-ph="Biggest quoting challenge?"
+                    data-se-ph="Största utmaningen med offerter?"
+                    placeholder="Biggest quoting challenge?"></textarea>
+          <div class="field-counter" id="messageCounter" aria-live="polite">0 / 500</div>
+        </div>
+
+        <div id="form-error" class="form-error hidden"></div>
+
+        <button type="submit" class="btn-submit" id="submitBtn"
+                data-en="Apply for Early Access"
+                data-se="Ansök om tidig tillgång">Apply for Early Access</button>
+      </form>
+
+      <div id="form-success" class="form-success hidden">
+        <div class="success-icon">&#10004;</div>
+        <p data-en="Thank you! We will be in touch."
+           data-se="Tack! Vi hör av oss."></p>
+      </div>
+    </div>
   </div>
+</section>
 
+<!-- COMPARISON -->
+<section class="comparison section-bg comparison-bg">
+  <div class="comparison-inner content-wrap">
+    <h2 data-en="Say goodbye to quoting headaches."
+        data-se="Säg hejdå till offertproblemen."></h2>
+    <p class="comparison-sub"
+       data-en="More time on the job, less time quoting."
+       data-se="Mer tid på jobbet, mindre tid på offerter."></p>
+
+    <div class="comparison-cards">
+      <div class="card card-before">
+        <h3 data-en="Before Quote Vector"
+            data-se="Före Quote Vector"></h3>
+        <ul>
+          <li><span class="x-icon">&#10008;</span>
+            <span data-en="Manual spreadsheets" data-se="Manuella kalkylblad"></span></li>
+          <li><span class="x-icon">&#10008;</span>
+            <span data-en="Missed items" data-se="Missade poster"></span></li>
+          <li><span class="x-icon">&#10008;</span>
+            <span data-en="Slow quotes" data-se="Långsamma offerter"></span></li>
+          <li><span class="x-icon">&#10008;</span>
+            <span data-en="Delayed customer responses" data-se="Försenade kundsvar"></span></li>
+          <li><span class="x-icon">&#10008;</span>
+            <span data-en="Lost jobs" data-se="Förlorade jobb"></span></li>
+        </ul>
+      </div>
+      <div class="card card-after">
+        <h3 data-en="With Quote Vector"
+            data-se="Med Quote Vector"></h3>
+        <ul>
+          <li><span class="check-green">&#10004;</span>
+            <span data-en="AI-assisted quoting" data-se="AI-assisterad offerering"></span></li>
+          <li><span class="check-green">&#10004;</span>
+            <span data-en="Accurate pricing" data-se="Korrekt prissättning"></span></li>
+          <li><span class="check-green">&#10004;</span>
+            <span data-en="Faster turnaround" data-se="Snabbare leverans"></span></li>
+          <li><span class="check-green">&#10004;</span>
+            <span data-en="Be first to act when customers respond" data-se="Var först att agera när kunder svarar"></span></li>
+          <li class="plus-item"><span class="plus-icon">+</span>
+            <span data-en="More than just a quoting tool" data-se="Mer än bara ett offertverktyg"></span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="comparison-footer-copy">
+      <p class="footer-tagline"
+         data-en="Built with tradespeople in mind."
+         data-se="Byggt med hantverkare i fokus."></p>
+      <p class="footer-sub"
+         data-en="More time on the job, less time quoting."
+         data-se="Mer tid på jobbet, mindre tid på offerter."></p>
+      <div class="comparison-meta">
+        <div class="footer-left">
+          <img src="assets/lefticon.svg" alt="" class="footer-icon">
+          <span class="comparison-meta-text"
+                data-en="Currently onboarding pilot users focused on saving time
+and maximizing billable hours."
+                data-se="Vi tar just nu in pilotanvändare med fokus på att spara tid och
+maximera fakturerbara timmar."></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <p class="footer-legal">
+    <span>© 2026 Quote Vector</span>
+    <span class="footer-legal-separator" aria-hidden="true">|</span>
+    <span data-en="All rights reserved."
+          data-se="Alla rättigheter förbehållna"></span>
+  </p>
+</footer>
+
+<script src="script.js"></script>
 </body>
 </html>
