@@ -525,13 +525,21 @@ button {
 }
 
 .form-error {
-  margin: 0 0 10px;
-  padding: 10px 12px;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 40;
+  width: min(calc(100vw - 32px), 360px);
+  margin: 0;
+  padding: 12px 14px;
   border: 1px solid rgba(230, 106, 115, 0.35);
   border-radius: 6px;
   background: rgba(252, 239, 240, 0.95);
+  box-shadow: 0 16px 36px rgba(8, 12, 20, 0.3);
   color: #9d2831;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
+  text-align: center;
+  transform: translate(-50%, -50%);
 }
 
 .form-success {

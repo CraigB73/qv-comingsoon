@@ -1,5 +1,8 @@
 export async function onRequestPost(context) {
   const { request, env } = context;
+  const turnstileSecret =
+    env.TURNSTILE_SECRET_KEY ||
+    (typeof process !== "undefined" && process.env ? process.env.TURNSTILE_SECRET_KEY : "");
 
   try {
     const formData = await request.formData();
@@ -13,13 +16,13 @@ export async function onRequestPost(context) {
       return json({ error: "Please complete the verification step." }, 400);
     }
 
-    if (!env.TURNSTILE_SECRET_KEY) {
+    if (!turnstileSecret) {
       return json({ error: "Turnstile secret is not configured." }, 500);
     }
 
     const ip = request.headers.get("CF-Connecting-IP") || "";
     const verifyForm = new URLSearchParams();
-    verifyForm.set("secret", env.TURNSTILE_SECRET_KEY);
+    verifyForm.set("secret", turnstileSecret);
     verifyForm.set("response", token);
     if (ip) verifyForm.set("remoteip", ip);
 
