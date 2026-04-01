@@ -38,6 +38,17 @@ In Cloudflare Pages project settings, add:
 
 Deploy the site to Cloudflare Pages.
 
+Before deploying, verify these Pages settings to avoid `405 Method Not Allowed` on `/api/enquiry`:
+
+1. The Pages project root is the repo root, or the configured project root contains both:
+   - `index.html`
+   - `functions/api/enquiry.js`
+2. The build output directory is not pointing to a subdirectory that excludes `functions/`
+3. The deployment includes:
+   - `functions/api/enquiry.js`
+   - `_routes.json`
+4. After changing Functions, routes, or env vars, trigger a fresh redeploy
+
 The form will now:
 
 1. render the Turnstile widget in the browser
@@ -60,4 +71,9 @@ After deployment:
 
 - If you see `Turnstile is not configured yet`, the site key in `index.html` is still the placeholder.
 - If the form fails with verification errors, check that `TURNSTILE_SECRET_KEY` is set correctly in Cloudflare.
+- If `POST /api/enquiry` returns `405`, check:
+  - the Pages project is deploying this exact repo and branch
+  - the project root/build output is not excluding `functions/`
+  - `_routes.json` is present in the deployed root
+  - a fresh deployment has completed after the latest function changes
 - If verification succeeds but no email arrives, verify your FormSubmit setup and recipient inbox.

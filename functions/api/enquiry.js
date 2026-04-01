@@ -61,6 +61,15 @@ export async function onRequestPost(context) {
   }
 }
 
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      Allow: "POST, OPTIONS"
+    }
+  });
+}
+
 function json(body, status) {
   return new Response(JSON.stringify(body), {
     status,
