@@ -909,7 +909,7 @@ onBeforeUnmount(() => {
         <div class="modal-body">
           <p v-for="(para, i) in t.privacyBody.split('\\n\\n')" :key="i">{{ para }}</p>
           <p class="modal-contact">
-            <a href="mailto:qv.dev@outlook.com">{{ t.privacyContact }}</a>
+            <a href="mailto:privacy@quotevector.com">{{ t.privacyContact }}</a>
           </p>
         </div>
         <button class="modal-close-btn" @click="showPrivacyPolicy = false">
