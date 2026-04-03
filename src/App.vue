@@ -386,10 +386,7 @@ async function submitForm() {
   if (!form.quote_time) return setError(t.value.errors.quoteTime);
 
   // Turnstile
-  if (
-    !TURNSTILE_SITE_KEY.value ||
-    TURNSTILE_SITE_KEY.value === "0x4AAAAAACzCvZbd_c6Shmsi"
-  ) {
+  if (!TURNSTILE_SITE_KEY.value) {
     return setError(t.value.errors.config);
   }
 
