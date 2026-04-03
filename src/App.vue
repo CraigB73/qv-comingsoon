@@ -1,0 +1,2151 @@
+<script setup>
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
+
+// ---------------------------------------------------------------------------
+// Config (injected via meta tags in index.html)
+// ---------------------------------------------------------------------------
+const TURNSTILE_SITE_KEY = ref("");
+const EDGE_FUNCTION_URL = ref("");
+
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+const currentLang = ref("en");
+const submitting = ref(false);
+const turnstileReady = ref(false);
+const formSucceeded = ref(false);
+const formError = ref("");
+const messageCount = ref(0);
+const showScrollIndicator = ref(true);
+const lastSubmitTime = ref(0);
+const COOLDOWN_MS = 10_000;
+const videoEnded = ref(false);
+
+const turnstileContainer = ref(null);
+const videoRef = ref(null);
+let errorTimer = null;
+let scrollHandler = null;
+
+// ---------------------------------------------------------------------------
+// Form model
+// ---------------------------------------------------------------------------
+const form = reactive({
+  first_name: "",
+  last_name: "",
+  company_name: "",
+  trade: "",
+  company_type: "",
+  email: "",
+  phone: "",
+  quotes_per_month: "",
+  quote_time: "",
+  company_size: "",
+  message: "",
+  _honey: "",
+});
+
+// ---------------------------------------------------------------------------
+// i18n
+// ---------------------------------------------------------------------------
+const copy = {
+  en: {
+    switchLabel: "Switch to Swedish",
+    heroTitle: "Create accurate quotes in minutes — not hours.",
+    heroText:
+      "Built for tradespeople who are tired of spreadsheets, guesswork, and underpricing jobs.",
+    heroCta: "Get Early Access",
+    accessTitle: "Get early access to Quote Vector",
+    accessText:
+      "We're onboarding a small group of trade businesses to test and shape the platform.",
+    accessBenefits: [
+      "Get free access during testing",
+      "Help shape features for your workflow",
+      "Lock in early pricing",
+    ],
+    formTitle: "Apply for Pilot Access",
+    placeholders: {
+      firstName: "First Name",
+      lastName: "Last Name",
+      company: "Company Name",
+      trade: "Trade",
+      companyType: "Company Type",
+      email: "Email",
+      phone: "Phone (optional)",
+      quotesPerMonth: "Quotes per month",
+      quoteTime: "Avg. time creating quotes",
+      companySize: "Company size",
+      message: "Biggest quoting challenge?",
+    },
+    formLabels: {
+      quotesPerMonth: "Quotes per month",
+      quoteTime: "Time per quote",
+      companySize: "Company size",
+    },
+    tradeOptions: [
+      "Electrical",
+      "Plumbing",
+      "HVAC",
+      "General Construction",
+      "Painting",
+      "Roofing",
+      "Carpentry",
+      "Landscaping",
+      "Other",
+    ],
+    companyTypeOptions: [
+      "Sole Trader",
+      "Small Business",
+      "Growing Company",
+      "Enterprise",
+    ],
+    quoteTimeOptions: [
+      "Under 30 minutes",
+      "30 min – 1 hour",
+      "1 – 2 hours",
+      "2 – 4 hours",
+      "4+ hours",
+    ],
+    comparison: {
+      title: "Say goodbye to quoting headaches.",
+      sub: "More time on the job, less time quoting.",
+      beforeTitle: "Before Quote Vector",
+      beforeItems: [
+        "Manual spreadsheets",
+        "Missed items",
+        "Slow quotes",
+        "Delayed customer responses",
+        "Lost jobs",
+      ],
+      afterTitle: "With Quote Vector",
+      afterItems: [
+        "AI-assisted quoting",
+        "Accurate pricing",
+        "Faster turnaround",
+        "Be first to act when customers respond",
+      ],
+      extra: "More than just a quoting tool",
+      footerTitle: "Built with tradespeople in mind.",
+      footerSub: "More time on the job, less time quoting.",
+      footerMeta:
+        "Currently onboarding pilot users focused on saving time and maximizing billable hours.",
+    },
+    legal: "All rights reserved.",
+    success: "Thank you! We'll be in touch soon.",
+    sending: "Sending...",
+    submit: "Apply for Early Access",
+    errors: {
+      firstName: "Please enter your first name.",
+      lastName: "Please enter your last name.",
+      company: "Please enter your company name.",
+      emailRequired: "Please enter your email address.",
+      emailInvalid: "Please enter a valid email address.",
+      trade: "Please select your trade.",
+      companyType: "Please select your company type.",
+      quoteTime: "Please select average time creating quotes.",
+      turnstile: "Please complete the verification step.",
+      turnstileDomain:
+        "Turnstile rejected this domain. Add this hostname to your Cloudflare Turnstile widget.",
+      config:
+        "Turnstile is not configured. Add your site key before going live.",
+      cooldown: "Please wait a moment before submitting again.",
+      duplicate: "This email has already been registered.",
+      rateLimit: "Too many submissions. Please try again later.",
+      send: "Something went wrong. Please try again.",
+    },
+  },
+  sv: {
+    switchLabel: "Switch to English",
+    heroTitle: "Skapa exakta offerter på minuter — inte timmar.",
+    heroText:
+      "Byggt för hantverkare som är trötta på kalkylblad, gissningar och felprissatta jobb.",
+    heroCta: "Få tidig tillgång",
+    accessTitle: "Få tidig tillgång till Quote Vector",
+    accessText:
+      "Vi tar in en liten grupp hantverksföretag för att testa och forma plattformen.",
+    accessBenefits: [
+      "Gratis tillgång under testperioden",
+      "Hjälp forma funktioner för ditt arbetsflöde",
+      "Säkra tidig prissättning",
+    ],
+    formTitle: "Ansök om pilotåtkomst",
+    placeholders: {
+      firstName: "Förnamn",
+      lastName: "Efternamn",
+      company: "Företagsnamn",
+      trade: "Bransch",
+      companyType: "Företagstyp",
+      email: "E-postadress",
+      phone: "Telefon (valfritt)",
+      quotesPerMonth: "Offerter per månad",
+      quoteTime: "Tid per offert",
+      companySize: "Företagsstorlek",
+      message: "Största utmaningen med offerter?",
+    },
+    formLabels: {
+      quotesPerMonth: "Offerter per månad",
+      quoteTime: "Tid per offert",
+      companySize: "Företagsstorlek",
+    },
+    tradeOptions: [
+      "El",
+      "VVS",
+      "Ventilation",
+      "Bygg allmänt",
+      "Måleri",
+      "Tak",
+      "Snickeri",
+      "Markarbete",
+      "Övrigt",
+    ],
+    companyTypeOptions: [
+      "Enskild firma",
+      "Litet företag",
+      "Växande företag",
+      "Större organisation",
+    ],
+    quoteTimeOptions: [
+      "Under 30 minuter",
+      "30 min – 1 timme",
+      "1 – 2 timmar",
+      "2 – 4 timmar",
+      "4+ timmar",
+    ],
+    comparison: {
+      title: "Säg hejdå till offertproblemen.",
+      sub: "Mer tid på jobbet, mindre tid på offerter.",
+      beforeTitle: "Före Quote Vector",
+      beforeItems: [
+        "Manuella kalkylblad",
+        "Missade poster",
+        "Långsamma offerter",
+        "Försenade kundsvar",
+        "Förlorade jobb",
+      ],
+      afterTitle: "Med Quote Vector",
+      afterItems: [
+        "AI-assisterad offerering",
+        "Korrekt prissättning",
+        "Snabbare leverans",
+        "Var först att agera när kunder svarar",
+      ],
+      extra: "Mer än bara ett offertverktyg",
+      footerTitle: "Byggt med hantverkare i fokus.",
+      footerSub: "Mer tid på jobbet, mindre tid på offerter.",
+      footerMeta:
+        "Vi tar just nu in pilotanvändare med fokus på att spara tid och maximera fakturerbara timmar.",
+    },
+    legal: "Alla rättigheter förbehållna",
+    success: "Tack! Vi hör av oss.",
+    sending: "Skickar...",
+    submit: "Ansök om tidig tillgång",
+    errors: {
+      firstName: "Vänligen ange ditt förnamn.",
+      lastName: "Vänligen ange ditt efternamn.",
+      company: "Vänligen ange ditt företagsnamn.",
+      emailRequired: "Vänligen ange din e-postadress.",
+      emailInvalid: "Vänligen ange en giltig e-postadress.",
+      trade: "Vänligen välj din bransch.",
+      companyType: "Vänligen välj din företagstyp.",
+      quoteTime: "Vänligen välj tid per offert.",
+      turnstile: "Vänligen slutför verifieringen.",
+      turnstileDomain:
+        "Turnstile avvisade denna domän. Lägg till värdnamnet i Cloudflare Turnstile-inställningarna.",
+      config:
+        "Turnstile är inte konfigurerat ännu. Lägg till din site key innan lansering.",
+      cooldown: "Vänta en stund innan du skickar igen.",
+      duplicate: "Denna e-postadress har redan registrerats.",
+      rateLimit: "För många inskickningar. Försök igen senare.",
+      send: "Något gick fel. Försök igen.",
+    },
+  },
+};
+
+const t = computed(() => copy[currentLang.value]);
+const isSubmitDisabled = computed(() => submitting.value || !turnstileReady.value);
+
+// ---------------------------------------------------------------------------
+// Language toggle
+// ---------------------------------------------------------------------------
+function toggleLanguage() {
+  currentLang.value = currentLang.value === "en" ? "sv" : "en";
+  document.documentElement.lang = currentLang.value;
+  localStorage.setItem("qv-lang", currentLang.value);
+}
+
+// ---------------------------------------------------------------------------
+// Scroll
+// ---------------------------------------------------------------------------
+function scrollToForm() {
+  document.getElementById("register")?.scrollIntoView({ behavior: "smooth" });
+}
+
+// ---------------------------------------------------------------------------
+// Error display (auto-dismiss 4s)
+// ---------------------------------------------------------------------------
+function setError(message) {
+  formError.value = message;
+  if (errorTimer) clearTimeout(errorTimer);
+  errorTimer = window.setTimeout(() => {
+    formError.value = "";
+    errorTimer = null;
+  }, 4000);
+}
+
+function clearError() {
+  formError.value = "";
+  if (errorTimer) {
+    clearTimeout(errorTimer);
+    errorTimer = null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Message counter
+// ---------------------------------------------------------------------------
+function updateMessageCount() {
+  messageCount.value = form.message.length;
+}
+
+// ---------------------------------------------------------------------------
+// Swedish phone formatter
+// ---------------------------------------------------------------------------
+function formatSwedishPhone(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+
+  let normalized = raw.replace(/[^\d+]/g, "");
+  if (normalized.startsWith("00")) normalized = `+${normalized.slice(2)}`;
+
+  if (!normalized.startsWith("+")) {
+    normalized = normalized.startsWith("0")
+      ? `+46${normalized.slice(1)}`
+      : `+46${normalized}`;
+  }
+
+  const digits = `+${normalized.slice(1).replace(/\D/g, "")}`;
+  const match = digits.match(/^\+(\d{1,3})(\d*)$/);
+  if (!match) return digits;
+
+  const [, countryCode, tail] = match;
+  const groups = [];
+  let rest = tail;
+  while (rest.length > 3) {
+    groups.push(rest.slice(0, 3));
+    rest = rest.slice(3);
+  }
+  if (rest) groups.push(rest);
+  return `+${countryCode}${groups.length ? ` ${groups.join(" ")}` : ""}`;
+}
+
+function onPhoneFocus() {
+  if (!form.phone.trim()) form.phone = "+46 ";
+}
+
+function onPhoneInput(event) {
+  form.phone = formatSwedishPhone(event.target.value);
+}
+
+function onPhoneBlur() {
+  const formatted = formatSwedishPhone(form.phone);
+  form.phone = formatted === "+46" ? "" : formatted;
+}
+
+// ---------------------------------------------------------------------------
+// Video handler
+// ---------------------------------------------------------------------------
+function onVideoEnded() {
+  videoEnded.value = true;
+}
+
+function onVideoError() {
+  videoEnded.value = true;
+}
+
+// ---------------------------------------------------------------------------
+// Submit
+// ---------------------------------------------------------------------------
+async function submitForm() {
+  clearError();
+
+  // Cooldown
+  const now = Date.now();
+  if (now - lastSubmitTime.value < COOLDOWN_MS) {
+    return setError(t.value.errors.cooldown);
+  }
+
+  // Validate
+  if (!form.first_name.trim()) return setError(t.value.errors.firstName);
+  if (!form.last_name.trim()) return setError(t.value.errors.lastName);
+  if (!form.company_name.trim()) return setError(t.value.errors.company);
+  if (!form.email.trim()) return setError(t.value.errors.emailRequired);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
+    return setError(t.value.errors.emailInvalid);
+  if (!form.trade) return setError(t.value.errors.trade);
+  if (!form.company_type) return setError(t.value.errors.companyType);
+  if (!form.quote_time) return setError(t.value.errors.quoteTime);
+
+  // Turnstile
+  if (
+    !TURNSTILE_SITE_KEY.value ||
+    TURNSTILE_SITE_KEY.value === "YOUR_TURNSTILE_SITE_KEY"
+  ) {
+    return setError(t.value.errors.config);
+  }
+
+  const tokenField = document.querySelector('[name="cf-turnstile-response"]');
+  if (!turnstileReady.value || !tokenField?.value) {
+    return setError(t.value.errors.turnstile);
+  }
+
+  submitting.value = true;
+  lastSubmitTime.value = now;
+
+  const payload = {
+    first_name: form.first_name.trim(),
+    last_name: form.last_name.trim(),
+    company_name: form.company_name.trim(),
+    trade: form.trade,
+    company_type: form.company_type,
+    email: form.email.trim().toLowerCase(),
+    phone: form.phone.trim() || null,
+    quotes_per_month: form.quotes_per_month || null,
+    quote_time: form.quote_time || null,
+    company_size: form.company_size || null,
+    message: form.message.trim().slice(0, 500) || null,
+    language: currentLang.value,
+    turnstileToken: tokenField.value,
+    _honey: form._honey,
+  };
+
+  try {
+    const res = await fetch(EDGE_FUNCTION_URL.value, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      const errMsg = data?.error || t.value.errors.send;
+
+      if (res.status === 409) throw new Error(t.value.errors.duplicate);
+      if (res.status === 429) throw new Error(t.value.errors.rateLimit);
+      throw new Error(errMsg);
+    }
+
+    formSucceeded.value = true;
+  } catch (error) {
+    setError(error.message || t.value.errors.send);
+    if (window.turnstile?.reset && turnstileContainer.value) {
+      window.turnstile.reset(turnstileContainer.value);
+    }
+    turnstileReady.value = false;
+  } finally {
+    submitting.value = false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Lifecycle
+// ---------------------------------------------------------------------------
+onMounted(() => {
+  // Read config from meta tags
+  const siteKeyMeta = document.querySelector('meta[name="turnstile-site-key"]');
+  TURNSTILE_SITE_KEY.value = siteKeyMeta?.getAttribute("content") ?? "";
+
+  const edgeMeta = document.querySelector('meta[name="edge-function-url"]');
+  EDGE_FUNCTION_URL.value =
+    edgeMeta?.getAttribute("content") ?? "/functions/v1/submit-lead";
+
+  // Language
+  const saved = localStorage.getItem("qv-lang");
+  const browserLang = navigator.language.slice(0, 2);
+  currentLang.value = saved || (browserLang === "sv" ? "sv" : "en");
+  document.documentElement.lang = currentLang.value;
+  updateMessageCount();
+
+  // Scroll indicator
+  scrollHandler = () => {
+    showScrollIndicator.value = window.scrollY <= 8;
+  };
+  window.addEventListener("scroll", scrollHandler, { passive: true });
+  scrollHandler();
+
+  // Turnstile callbacks
+  window.onTurnstileSuccess = () => {
+    turnstileReady.value = true;
+    clearError();
+  };
+  window.onTurnstileExpired = () => {
+    turnstileReady.value = false;
+    setError(t.value.errors.turnstile);
+  };
+  window.onTurnstileError = (code) => {
+    turnstileReady.value = false;
+    if (String(code || "") === "110200") {
+      setError(t.value.errors.turnstileDomain);
+      return;
+    }
+    setError(t.value.errors.turnstile);
+  };
+});
+
+onBeforeUnmount(() => {
+  if (scrollHandler) window.removeEventListener("scroll", scrollHandler);
+  if (errorTimer) clearTimeout(errorTimer);
+});
+</script>
+
+<template>
+  <!-- ====== HEADER ====== -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-left">
+        <img src="/logo.png" alt="Quote Vector" class="header-logo" />
+        <span class="header-brand">QUOTE VECTOR</span>
+      </div>
+      <button
+        :class="['lang-toggle', currentLang === 'en' ? 'is-en' : 'is-sv']"
+        :aria-label="t.switchLabel"
+        :aria-pressed="String(currentLang === 'sv')"
+        @click="toggleLanguage"
+      >
+        <span class="lang-slider" aria-hidden="true"></span>
+        <span class="lang-option lang-option-en">EN</span>
+        <span class="lang-option lang-option-se">SV</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ====== HERO (video background) ====== -->
+  <section class="hero section-bg">
+    <div class="hero-media">
+      <img
+        v-if="videoEnded"
+        src="/hero-poster.jpg"
+        alt=""
+        class="hero-poster"
+      />
+      <video
+        v-else
+        ref="videoRef"
+        class="hero-video"
+        autoplay
+        muted
+        playsinline
+        preload="auto"
+        poster="/hero-poster.jpg"
+        @ended="onVideoEnded"
+      >
+        <source src="/hero-video.mp4" type="video/mp4" @error="onVideoError" />
+      </video>
+      <div class="hero-overlay"></div>
+    </div>
+
+    <div class="hero-content content-wrap">
+      <div class="hero-text">
+        <h1>{{ t.heroTitle }}</h1>
+        <p>{{ t.heroText }}</p>
+        <div class="hero-buttons">
+          <a
+            href="#register"
+            class="btn-primary"
+            @click.prevent="scrollToForm"
+          >
+            {{ t.heroCta }}
+          </a>
+        </div>
+        <a
+          v-show="showScrollIndicator"
+          href="#register"
+          class="hero-scroll-indicator"
+          aria-label="Scroll down"
+          @click.prevent="scrollToForm"
+        >
+          <span class="hero-scroll-arrow" aria-hidden="true"></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== ACCESS / FORM ====== -->
+  <section class="access section-bg access-bg" id="register">
+    <div class="access-top content-wrap">
+      <div class="access-text">
+        <h2>{{ t.accessTitle }}</h2>
+        <p class="access-desc">{{ t.accessText }}</p>
+        <ul class="access-benefits">
+          <li v-for="benefit in t.accessBenefits" :key="benefit">
+            <span class="check-icon">&#10004;</span>
+            <span>{{ benefit }}</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="form-card" id="form-card">
+        <h3>{{ t.formTitle }}</h3>
+
+        <form
+          v-if="!formSucceeded"
+          id="enquiry-form"
+          novalidate
+          @submit.prevent="submitForm"
+        >
+          <!-- Honeypot -->
+          <input
+            v-model="form._honey"
+            type="text"
+            name="_honey"
+            class="visually-hidden-field"
+            tabindex="-1"
+            autocomplete="off"
+            aria-hidden="true"
+          />
+
+          <!-- Name row -->
+          <div class="field-row">
+            <div class="field">
+              <input
+                v-model="form.first_name"
+                type="text"
+                name="first_name"
+                required
+                autocomplete="given-name"
+                :placeholder="t.placeholders.firstName"
+              />
+            </div>
+            <div class="field">
+              <input
+                v-model="form.last_name"
+                type="text"
+                name="last_name"
+                required
+                autocomplete="family-name"
+                :placeholder="t.placeholders.lastName"
+              />
+            </div>
+          </div>
+
+          <!-- Company name -->
+          <div class="field">
+            <input
+              v-model="form.company_name"
+              type="text"
+              name="company_name"
+              required
+              autocomplete="organization"
+              :placeholder="t.placeholders.company"
+            />
+          </div>
+
+          <!-- Trade + Company type row -->
+          <div class="field-row">
+            <div class="field">
+              <select v-model="form.trade" name="trade" required>
+                <option value="" disabled>{{ t.placeholders.trade }}</option>
+                <option
+                  v-for="opt in t.tradeOptions"
+                  :key="opt"
+                  :value="opt"
+                >
+                  {{ opt }}
+                </option>
+              </select>
+            </div>
+            <div class="field">
+              <select v-model="form.company_type" name="company_type" required>
+                <option value="" disabled>
+                  {{ t.placeholders.companyType }}
+                </option>
+                <option
+                  v-for="opt in t.companyTypeOptions"
+                  :key="opt"
+                  :value="opt"
+                >
+                  {{ opt }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Email + Phone row -->
+          <div class="field-row">
+            <div class="field">
+              <input
+                v-model="form.email"
+                type="email"
+                name="email"
+                required
+                autocomplete="email"
+                :placeholder="t.placeholders.email"
+              />
+            </div>
+            <div class="field">
+              <input
+                :value="form.phone"
+                type="tel"
+                name="phone"
+                autocomplete="tel"
+                :placeholder="t.placeholders.phone"
+                @focus="onPhoneFocus"
+                @input="onPhoneInput"
+                @blur="onPhoneBlur"
+              />
+            </div>
+          </div>
+
+          <!-- Quotes per month + Quote time row -->
+          <div class="field-row">
+            <div class="field">
+              <label for="quotesPerMonth" class="field-top-label">
+                {{ t.formLabels.quotesPerMonth }}
+              </label>
+              <select
+                id="quotesPerMonth"
+                v-model="form.quotes_per_month"
+                name="quotes_per_month"
+              >
+                <option value="" disabled>
+                  {{ t.placeholders.quotesPerMonth }}
+                </option>
+                <option value="1-10">1-10</option>
+                <option value="11-25">11-25</option>
+                <option value="26-50">26-50</option>
+                <option value="50+">50+</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="quoteTime" class="field-top-label">
+                {{ t.formLabels.quoteTime }}
+              </label>
+              <select
+                id="quoteTime"
+                v-model="form.quote_time"
+                name="quote_time"
+                required
+              >
+                <option value="" disabled>
+                  {{ t.placeholders.quoteTime }}
+                </option>
+                <option
+                  v-for="opt in t.quoteTimeOptions"
+                  :key="opt"
+                  :value="opt"
+                >
+                  {{ opt }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Company size -->
+          <div class="field">
+            <label for="companySize" class="field-top-label">
+              {{ t.formLabels.companySize }}
+            </label>
+            <select
+              id="companySize"
+              v-model="form.company_size"
+              name="company_size"
+            >
+              <option value="" disabled>
+                {{ t.placeholders.companySize }}
+              </option>
+              <option value="1-5">1-5</option>
+              <option value="6-20">6-20</option>
+              <option value="21-50">21-50</option>
+              <option value="50+">50+</option>
+            </select>
+          </div>
+
+          <!-- Message -->
+          <div class="field">
+            <textarea
+              v-model="form.message"
+              name="message"
+              rows="2"
+              maxlength="500"
+              :placeholder="t.placeholders.message"
+              @input="updateMessageCount"
+            ></textarea>
+            <div class="field-counter" aria-live="polite">
+              {{ messageCount }} / 500
+            </div>
+          </div>
+
+          <!-- Turnstile -->
+          <div class="field turnstile-field">
+            <div
+              ref="turnstileContainer"
+              class="cf-turnstile"
+              :data-sitekey="TURNSTILE_SITE_KEY"
+              data-theme="dark"
+              data-size="flexible"
+              data-callback="onTurnstileSuccess"
+              data-error-callback="onTurnstileError"
+              data-expired-callback="onTurnstileExpired"
+            ></div>
+          </div>
+
+          <!-- Error toast -->
+          <div v-if="formError" class="form-error">{{ formError }}</div>
+
+          <!-- Submit -->
+          <button
+            type="submit"
+            class="btn-submit"
+            :disabled="isSubmitDisabled"
+          >
+            {{ submitting ? t.sending : t.submit }}
+          </button>
+        </form>
+
+        <!-- Success state -->
+        <div v-else class="form-success">
+          <div class="success-icon">&#10004;</div>
+          <p>{{ t.success }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== COMPARISON ====== -->
+  <section class="comparison section-bg comparison-bg">
+    <div class="comparison-inner content-wrap">
+      <h2>{{ t.comparison.title }}</h2>
+      <p class="comparison-sub">{{ t.comparison.sub }}</p>
+
+      <div class="comparison-cards">
+        <div class="card card-before">
+          <h3>{{ t.comparison.beforeTitle }}</h3>
+          <ul>
+            <li
+              v-for="item in t.comparison.beforeItems"
+              :key="item"
+            >
+              <span class="x-icon">&#10008;</span>
+              <span>{{ item }}</span>
+            </li>
+          </ul>
+        </div>
+        <div class="card card-after">
+          <h3>{{ t.comparison.afterTitle }}</h3>
+          <ul>
+            <li
+              v-for="item in t.comparison.afterItems"
+              :key="item"
+            >
+              <span class="check-green">&#10004;</span>
+              <span>{{ item }}</span>
+            </li>
+            <li class="plus-item">
+              <span class="plus-icon">+</span>
+              <span>{{ t.comparison.extra }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="comparison-footer-copy">
+        <p class="footer-tagline">{{ t.comparison.footerTitle }}</p>
+        <p class="footer-sub">{{ t.comparison.footerSub }}</p>
+        <div class="comparison-meta">
+          <div class="footer-left">
+            <span class="comparison-meta-text">
+              {{ t.comparison.footerMeta }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== FOOTER ====== -->
+  <footer class="footer">
+    <p class="footer-legal">
+      <span>&copy; 2026 Quote Vector</span>
+      <span class="footer-legal-separator" aria-hidden="true">|</span>
+      <span>{{ t.legal }}</span>
+    </p>
+  </footer>
+</template>
+
+<style>
+/* ============================================================= */
+/* BASE TOKENS                                                    */
+/* ============================================================= */
+:root {
+  --bg: #0f1420;
+  --text: #f3f4fb;
+  --muted: #b3b7c9;
+  --green: #1fb35c;
+  --field-border: #d8dae3;
+  --danger: #e66a73;
+  --shadow: 0 18px 40px rgba(5, 9, 17, 0.28);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  overflow-x: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.45;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+a,
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.visually-hidden-field {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.content-wrap {
+  width: 100%;
+  max-width: 1024px;
+  margin: 0 auto;
+  padding-left: 18px;
+  padding-right: 18px;
+}
+
+.section-bg {
+  position: relative;
+  width: 100%;
+}
+
+/* ============================================================= */
+/* HEADER                                                         */
+/* ============================================================= */
+.header {
+  position: relative;
+  z-index: 10;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 20, 32, 0.96),
+    rgba(15, 20, 32, 0.92)
+  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.header-inner {
+  width: 100%;
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.header-logo {
+  width: clamp(24px, 3vw, 33px);
+  height: clamp(24px, 3vw, 33px);
+  border-radius: 4px;
+}
+
+.header-brand {
+  color: #ffffff;
+  font-size: clamp(12px, 1.6vw, 15.3px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+/* ============================================================= */
+/* LANG TOGGLE                                                    */
+/* ============================================================= */
+.lang-toggle {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: repeat(2, 1fr);
+  align-items: center;
+  min-width: 66px;
+  min-height: 28px;
+  padding: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #d8dceb;
+  font-size: 10px;
+  font-weight: 600;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.lang-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.lang-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(50% - 2px);
+  height: calc(100% - 4px);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #22c868, #16984c);
+  box-shadow: 0 4px 10px rgba(10, 20, 14, 0.35);
+  transition: transform 0.22s ease;
+}
+
+.lang-toggle.is-sv .lang-slider {
+  transform: translateX(100%);
+}
+
+.lang-option {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  min-height: 22px;
+  color: rgba(216, 220, 235, 0.76);
+  transition: color 0.2s ease;
+}
+
+.lang-toggle.is-en .lang-option-en,
+.lang-toggle.is-sv .lang-option-se {
+  color: #f8fffb;
+}
+
+.lang-toggle.is-en .lang-option-se,
+.lang-toggle.is-sv .lang-option-en {
+  color: rgba(216, 220, 235, 0.72);
+}
+
+/* ============================================================= */
+/* HERO — VIDEO BACKGROUND                                        */
+/* ============================================================= */
+.hero {
+  position: relative;
+  min-height: calc(100svh - 49px);
+  overflow: hidden;
+}
+
+.hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-video,
+.hero-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+      180deg,
+      rgba(14, 19, 30, 0.72) 0%,
+      rgba(14, 19, 30, 0.48) 34%,
+      rgba(14, 19, 30, 0.54) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(14, 19, 30, 0.86) 0%,
+      rgba(14, 19, 30, 0.5) 42%,
+      rgba(14, 19, 30, 0.18) 100%
+    );
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  padding-top: clamp(64px, 16vw, 104px);
+  padding-bottom: clamp(18px, 5vw, 32px);
+  min-height: calc(100svh - 49px);
+}
+
+.hero-text {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-text h1 {
+  margin: 0 0 clamp(10px, 2.8vw, 18px);
+  max-width: min(100%, 12ch);
+  color: #f4f4fb;
+  font-size: clamp(2.2rem, 10vw, 3.6rem);
+  line-height: 0.98;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.hero-text p {
+  max-width: min(100%, 31rem);
+  margin: 0 0 clamp(22px, 5vw, 38px);
+  color: var(--muted);
+  font-size: clamp(1rem, 4vw, 1.15rem);
+  line-height: 1.48;
+}
+
+.hero-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+  padding-top: clamp(18px, 4vw, 36px);
+}
+
+.hero-scroll-indicator {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+  margin: 14px auto 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 10px 20px rgba(4, 8, 15, 0.16);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.hero-scroll-arrow {
+  width: 9.6px;
+  height: 9.6px;
+  border-right: 2px solid rgba(255, 255, 255, 0.85);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.85);
+  transform: rotate(45deg) translateY(-1px);
+}
+
+/* ============================================================= */
+/* CTA BUTTONS                                                    */
+/* ============================================================= */
+.btn-primary,
+.btn-submit {
+  border-radius: 6px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  box-shadow: 0 7px 18px rgba(4, 8, 15, 0.2);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 340px);
+  min-height: clamp(50px, 12vw, 58px);
+  padding: 0 clamp(18px, 4vw, 24px);
+  border: 0;
+  background: linear-gradient(180deg, #22c868, #16984c);
+  color: #f7fff9;
+  text-decoration: none;
+}
+
+.btn-primary:hover,
+.btn-submit:hover {
+  filter: brightness(1.04);
+}
+
+/* ============================================================= */
+/* ACCESS SECTION                                                 */
+/* ============================================================= */
+.access {
+  min-height: 0;
+  overflow: hidden;
+  background-image: url("/MiddleImage.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center calc(50% - 54px);
+}
+
+.access::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+      180deg,
+      rgba(14, 19, 30, 0.84) 0%,
+      rgba(14, 19, 30, 0.62) 34%,
+      rgba(14, 19, 30, 0.48) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(14, 19, 30, 0.92) 0%,
+      rgba(14, 19, 30, 0.56) 44%,
+      rgba(14, 19, 30, 0.22) 100%
+    );
+}
+
+.access::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 88px;
+  background: linear-gradient(
+    180deg,
+    rgba(14, 19, 30, 0) 0%,
+    rgba(14, 19, 30, 0.34) 42%,
+    rgba(14, 19, 30, 0.74) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+.access .content-wrap {
+  position: relative;
+  z-index: 1;
+}
+
+.access-top {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  align-items: start;
+  padding-top: 42px;
+  padding-bottom: 42px;
+}
+
+.access-text {
+  display: flex;
+  flex-direction: column;
+  max-width: 360px;
+}
+
+.access-text h2 {
+  margin: 0 0 12px;
+  font-size: clamp(1.12rem, 5vw, 2.65rem);
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.access-desc {
+  margin: 0 0 20px;
+  color: var(--muted);
+  font-size: 0.96rem;
+  line-height: 1.5;
+}
+
+.access-benefits {
+  display: grid;
+  gap: 13px;
+}
+
+.access-benefits li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #eef0f7;
+  font-size: 0.93rem;
+  font-weight: 600;
+}
+
+.check-icon,
+.check-green {
+  color: #2cc56d;
+  font-weight: 700;
+}
+
+.check-icon {
+  font-size: 0.95rem;
+}
+
+/* ============================================================= */
+/* FORM CARD                                                      */
+/* ============================================================= */
+.form-card {
+  width: 100%;
+  max-width: 460px;
+  padding: 16px 16px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 10px;
+  background: linear-gradient(
+    180deg,
+    rgba(248, 248, 251, 0.26),
+    rgba(234, 236, 243, 0.18)
+  );
+  color: #131927;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px) saturate(130%);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+}
+
+.form-card h3 {
+  margin: 0 0 14px;
+  color: #f9fbff;
+  font-size: 1rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.field,
+.field-row {
+  margin-bottom: 8px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.field-top-label {
+  display: block;
+  margin: 0 0 5px;
+  color: #f9fbff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--field-border);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.58);
+  color: #3d4352;
+  font-size: 0.78rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.field textarea {
+  min-height: 60px;
+  padding-top: 11px;
+  padding-bottom: 11px;
+  resize: none;
+}
+
+.field-counter {
+  margin-top: 6px;
+  color: #f9fbff;
+  font-size: 0.72rem;
+  text-align: right;
+}
+
+.turnstile-field {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.turnstile-field .cf-turnstile {
+  width: 100%;
+}
+
+.field input::placeholder,
+.field textarea::placeholder,
+.field select {
+  color: #757b8b;
+}
+
+.field select {
+  appearance: none;
+  background-image: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.5),
+      rgba(240, 242, 247, 0.42)
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%231A2030' stroke-width='1.25' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat, no-repeat;
+  background-position: center, right 11px center;
+  background-size: auto, 10px 6px;
+  padding-right: 32px;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: #a5afc5;
+  box-shadow: 0 0 0 3px rgba(31, 179, 92, 0.12);
+}
+
+.btn-submit {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 6px;
+  border: 0;
+  background: linear-gradient(180deg, #20bf63 0%, #149649 100%);
+  color: #f7fff9;
+}
+
+.btn-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.form-error {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 40;
+  width: min(calc(100vw - 32px), 360px);
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(230, 106, 115, 0.35);
+  border-radius: 6px;
+  background: rgba(252, 239, 240, 0.95);
+  box-shadow: 0 16px 36px rgba(8, 12, 20, 0.3);
+  color: #9d2831;
+  font-size: 0.82rem;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.form-success {
+  padding: 24px 16px 18px;
+  text-align: center;
+}
+
+.success-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #22c868, #15964a);
+  color: #ffffff;
+  font-size: 1.4rem;
+}
+
+.form-success p {
+  margin: 0;
+  color: #eef0f7;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+/* ============================================================= */
+/* COMPARISON SECTION                                             */
+/* ============================================================= */
+.comparison {
+  min-height: 540px;
+  overflow: hidden;
+  background-image: url("/BottomImage.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: calc(50% - 50px) calc(50% + 85px);
+}
+
+.comparison::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(14, 19, 30, 0.45),
+    rgba(14, 19, 30, 0.75) 50%,
+    rgba(14, 19, 30, 0.9) 100%
+  );
+  z-index: 0;
+  pointer-events: none;
+}
+
+.comparison::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 88px;
+  background: linear-gradient(
+    180deg,
+    rgba(14, 19, 30, 0.74) 0%,
+    rgba(14, 19, 30, 0.34) 58%,
+    rgba(14, 19, 30, 0) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+.comparison .content-wrap {
+  position: relative;
+  z-index: 1;
+}
+
+.comparison-inner {
+  position: relative;
+  z-index: 1;
+  min-height: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 56px 16px 24px;
+  text-align: center;
+}
+
+.comparison h2 {
+  color: #f4f4fb;
+}
+
+.comparison-footer-copy {
+  margin-top: 26px;
+}
+
+.comparison-meta {
+  width: min(100%, 640px);
+  margin: 0 auto;
+}
+
+.comparison-cards {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  margin: 0 auto;
+  width: min(92vw, 944px);
+  overflow: visible;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.14),
+    0 0 42px rgba(47, 217, 187, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  isolation: isolate;
+}
+
+.card {
+  position: relative;
+  z-index: 1;
+  padding: clamp(14px, 1.5vw, 18px) clamp(14px, 1.7vw, 18px)
+    clamp(16px, 1.8vw, 20px);
+  text-align: left;
+}
+
+.card-before {
+  border: none;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+  background: linear-gradient(
+    135deg,
+    rgba(34, 42, 63, 0.17) 0%,
+    rgba(20, 28, 43, 0.14) 58%,
+    rgba(13, 18, 30, 0.08) 100%
+  );
+  backdrop-filter: blur(8px) saturate(118%);
+  -webkit-backdrop-filter: blur(8px) saturate(118%);
+}
+
+.card-after {
+  border-left: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  background: rgba(12, 18, 30, 0.02);
+}
+
+.card h3 {
+  margin: 0 0 10px;
+  color: #f7f8fd;
+  font-size: clamp(0.98rem, 1.05vw, 1.08rem);
+  font-weight: 700;
+}
+
+.card li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+  color: #cfd4e3;
+  font-size: clamp(0.84rem, 0.95vw, 0.96rem);
+}
+
+.x-icon {
+  color: #ff5d5d;
+  font-weight: 700;
+  font-size: clamp(0.94rem, 1vw, 1.06rem);
+}
+
+.check-green {
+  color: #22c55e;
+  font-size: clamp(0.94rem, 1vw, 1.06rem);
+}
+
+.plus-icon {
+  color: #9ca3af;
+  font-weight: 700;
+  font-size: clamp(0.94rem, 1vw, 1.06rem);
+}
+
+.plus-item span:last-child {
+  color: #b4bacb;
+}
+
+/* ============================================================= */
+/* FOOTER                                                         */
+/* ============================================================= */
+.footer {
+  margin-top: -1px;
+  padding: 8px 18px 12px;
+  text-align: center;
+  background: transparent;
+}
+
+.footer-tagline {
+  margin: 0 0 1px;
+  color: #f4f5fb;
+  font-size: clamp(1.14rem, 2vw, 1.42rem);
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.footer-sub {
+  margin: 0 0 12px;
+  color: #d4d8e7;
+  font-size: clamp(0.78rem, 1.2vw, 0.96rem);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(222, 226, 236, 0.72);
+  font-size: clamp(0.605rem, 0.9vw, 0.76rem);
+  text-align: center;
+  justify-content: center;
+  line-height: 1.35;
+  max-width: min(100%, 72ch);
+}
+
+.footer-icon {
+  width: 18px;
+  height: auto;
+  opacity: 0.64;
+}
+
+.footer-legal {
+  margin: 10px 0 0;
+  color: rgba(222, 226, 236, 0.82);
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+.footer-legal-separator {
+  margin: 0 8px;
+  opacity: 0.7;
+}
+
+/* ============================================================= */
+/* RESPONSIVE                                                     */
+/* ============================================================= */
+@media (min-width: 480px) {
+  .content-wrap {
+    padding-left: 22px;
+    padding-right: 22px;
+  }
+
+  .hero {
+    min-height: max(540px, calc(100svh - 49px));
+  }
+
+  .hero-content {
+    min-height: max(540px, calc(100svh - 49px));
+  }
+
+  .btn-primary {
+    width: min(100%, 360px);
+  }
+
+  .field-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .content-wrap {
+    padding-left: 26px;
+    padding-right: 26px;
+  }
+
+  .header-inner {
+    padding: 10px 14px;
+  }
+
+  .header-brand {
+    font-size: clamp(13px, 1.5vw, 16.2px);
+  }
+
+  .hero {
+    min-height: max(620px, calc(100svh - 49px));
+  }
+
+  .hero-overlay {
+    background: linear-gradient(
+        90deg,
+        rgba(14, 19, 30, 0.9) 0%,
+        rgba(14, 19, 30, 0.72) 33%,
+        rgba(14, 19, 30, 0.18) 62%,
+        rgba(14, 19, 30, 0.04) 100%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(15, 20, 32, 0.22),
+        rgba(15, 20, 32, 0.2)
+      );
+  }
+
+  .hero-content {
+    padding-top: clamp(72px, 10vw, 120px);
+    padding-bottom: clamp(28px, 6vw, 52px);
+    min-height: max(620px, calc(100svh - 49px));
+  }
+
+  .hero-text h1 {
+    max-width: min(100%, 12ch);
+    font-size: clamp(3rem, 6vw, 4.6rem);
+  }
+
+  .hero-text p {
+    max-width: min(100%, 34rem);
+    font-size: clamp(1.05rem, 2vw, 1.25rem);
+  }
+
+  .btn-primary,
+  .btn-submit {
+    font-size: 0.95rem;
+  }
+
+  .btn-primary {
+    width: min(100%, 380px);
+    min-height: 54px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .hero-buttons {
+    width: 100%;
+    margin-top: auto;
+    padding-top: 28px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hero-scroll-indicator {
+    display: inline-flex;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .access-top {
+    grid-template-columns: minmax(0, 1fr) clamp(340px, 42vw, 402px);
+    gap: clamp(28px, 4vw, 36px);
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 76px;
+    padding-bottom: 72px;
+  }
+
+  .access-text {
+    max-width: min(100%, 420px);
+    min-width: 0;
+    justify-self: start;
+    padding-top: 6px;
+  }
+
+  .access-text h2 {
+    max-width: 12ch;
+    font-size: clamp(2rem, 4.1vw, 2.35rem);
+    white-space: normal;
+    text-wrap: balance;
+  }
+
+  .access-desc {
+    font-size: 1rem;
+  }
+
+  .access-benefits li {
+    font-size: 0.98rem;
+  }
+
+  .form-card {
+    width: 100%;
+    max-width: 402px;
+    min-width: 0;
+    justify-self: end;
+    padding: 18px 18px 20px;
+  }
+
+  .comparison-inner {
+    padding-top: 72px;
+    padding-bottom: 72px;
+  }
+
+  .comparison h2 {
+    font-size: 1.38rem;
+  }
+
+  .comparison-sub {
+    position: relative;
+    margin: 2px 0 10px;
+    padding: 0;
+    font-size: 0.845rem;
+  }
+
+  .comparison-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: min(86vw, 820px);
+    transform: translateX(-14px);
+    align-self: center;
+  }
+
+  .card {
+    min-height: clamp(118px, 14vw, 134px);
+  }
+
+  .footer {
+    padding: 4px 30px 10px;
+  }
+
+  .footer-tagline {
+    font-size: 1.08rem;
+  }
+
+  .footer-sub {
+    margin-bottom: 8px;
+    font-size: 0.72rem;
+  }
+
+  .footer-legal {
+    margin-top: 8px;
+    font-size: 0.62rem;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .access-top {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding-top: 32px;
+    padding-bottom: 36px;
+  }
+
+  .access-text {
+    max-width: 100%;
+    padding-top: 0;
+  }
+
+  .access-text h2,
+  .access-desc {
+    text-align: center;
+  }
+
+  .access-desc {
+    max-width: 36ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .access-benefits {
+    max-width: max-content;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .form-card {
+    width: min(100%, 520px);
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (max-width: 480px) and (orientation: portrait) {
+  .hero-buttons {
+    padding-top: calc(clamp(18px, 4vw, 36px) + 10px);
+  }
+
+  .hero-scroll-indicator {
+    margin-top: 24px;
+  }
+
+  .access-top {
+    gap: 18px;
+    padding-top: 28px;
+    padding-bottom: 28px;
+  }
+
+  .access-text h2 {
+    margin-bottom: 10px;
+    font-size: 1.18rem;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .access-desc {
+    margin-bottom: 16px;
+    font-size: 0.62rem;
+    text-align: center;
+    width: 100%;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    white-space: pre-line;
+  }
+
+  .access-benefits {
+    gap: 6px;
+  }
+
+  .access-benefits li {
+    font-size: 0.84rem;
+    gap: 8px;
+  }
+
+  .form-card {
+    padding: 10px 10px 12px;
+  }
+
+  .form-card h3 {
+    margin-bottom: 10px;
+    font-size: 0.86rem;
+  }
+
+  .field,
+  .field-row {
+    margin-bottom: 5px;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    height: 30px;
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 0.68rem;
+  }
+
+  .field textarea {
+    min-height: 52px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .btn-submit {
+    min-height: 38px;
+    margin-top: 2px;
+  }
+
+  .comparison {
+    min-height: 400px;
+  }
+
+  .comparison-inner {
+    padding: 12px 14px 8px;
+    justify-content: flex-start;
+  }
+
+  .comparison h2 {
+    font-size: 1.18rem;
+  }
+
+  .comparison-sub {
+    margin: 2px 0 8px;
+    font-size: 0.805rem;
+  }
+
+  .comparison-cards {
+    width: min(100%, 92vw);
+    gap: 8px;
+  }
+
+  .card {
+    padding: 12px 12px 14px;
+  }
+
+  .card h3 {
+    margin-bottom: 8px;
+    font-size: 0.92rem;
+  }
+
+  .card li {
+    margin-bottom: 7px;
+    font-size: 0.8rem;
+  }
+
+  .comparison-footer-copy {
+    margin-top: 18px;
+  }
+
+  .footer-tagline {
+    font-size: 1.06rem;
+  }
+
+  .footer-sub {
+    margin-bottom: 8px;
+    font-size: 0.7rem;
+  }
+
+  .footer-left {
+    font-size: 0.52rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .comparison-cards {
+    grid-template-columns: 1fr;
+    transform: translateX(0);
+    gap: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .card {
+    border-radius: 10px;
+    border: 1px solid rgba(116, 225, 207, 0.18);
+    background: rgba(14, 19, 30, 0.06);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03),
+      0 0 24px rgba(47, 217, 187, 0.12);
+  }
+
+  .card-before,
+  .card-after {
+    background: rgba(14, 19, 30, 0.04);
+  }
+}
+
+@media (min-width: 1024px) {
+  .content-wrap {
+    padding-left: 30px;
+    padding-right: 30px;
+  }
+
+  .hero-text h1 {
+    font-size: clamp(3.34rem, 4.2vw, 4.8rem);
+  }
+
+  .access-text h2 {
+    font-size: clamp(2rem, 3vw, 2.65rem);
+  }
+
+  .comparison h2 {
+    font-size: 1.4rem;
+  }
+
+  .comparison-cards {
+    width: min(82vw, 860px);
+    transform: translateX(-12px);
+  }
+
+  .comparison {
+    min-height: 580px;
+  }
+}
+
+@media (min-width: 1120px) {
+  .access-top {
+    max-width: 1120px;
+    grid-template-columns: minmax(0, 1fr) clamp(420px, 41vw, 465px);
+    gap: 54px;
+    padding-top: 68px;
+    padding-bottom: 64px;
+    align-items: start;
+  }
+
+  .access-text {
+    max-width: 470px;
+    padding-top: 8px;
+    justify-self: start;
+  }
+
+  .access-text h2 {
+    font-size: clamp(2.2rem, 3vw, 2.85rem);
+  }
+
+  .form-card {
+    width: 100%;
+    max-width: 465px;
+    justify-self: end;
+    padding: 20px 20px 22px;
+  }
+
+  .comparison-inner {
+    padding-top: 84px;
+    padding-bottom: 78px;
+  }
+
+  .comparison h2 {
+    font-size: 1.52rem;
+  }
+
+  .comparison-sub {
+    font-size: 0.96rem;
+  }
+
+  .comparison-cards {
+    width: min(78vw, 940px);
+    transform: translateX(-12px);
+  }
+
+  .card {
+    min-height: clamp(126px, 12vw, 146px);
+  }
+}
+</style>
