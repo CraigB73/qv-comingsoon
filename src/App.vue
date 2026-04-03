@@ -160,7 +160,8 @@ const copy = {
     },
     privacyLink: "Data Privacy Policy",
     privacyTitle: "Data Privacy Policy",
-    privacyBody: `We collect your name, company details, email, phone number, and quoting preferences solely to evaluate your interest in Quote Vector and to contact you about early access.\n\nYour data is stored securely in our database and is only accessible to the Quote Vector platform team.\n\nWe do not share, sell, or transfer your personal information to third parties.\n\nOnce quotevector.com goes live, all personal information belonging to users who do not become active subscribers will be permanently deleted from our database.\n\nBy submitting this form, you consent to the collection and use of your data as described above.\n\nIf you have questions about your data, contact us at qv.dev@outlook.com.`,
+    privacyBody: `We collect your name, company details, email, phone number, and quoting preferences solely to evaluate your interest in Quote Vector and to contact you about early access.\n\nYour data is stored securely in our database and is only accessible to the Quote Vector platform team.\n\nWe do not share, sell, or transfer your personal information to third parties.\n\nOnce quotevector.com goes live, all personal information belonging to users who do not become active subscribers will be permanently deleted from our database.\n\nBy submitting this form, you consent to the collection and use of your data as described above.`,
+    privacyContact: "Contact us",
     privacyClose: "Close",
   },
   sv: {
@@ -272,7 +273,8 @@ const copy = {
     },
     privacyLink: "Integritetspolicy",
     privacyTitle: "Integritetspolicy",
-    privacyBody: `Vi samlar in ditt namn, företagsuppgifter, e-post, telefonnummer och offertvanor enbart för att bedöma ditt intresse för Quote Vector och för att kontakta dig om tidig åtkomst.\n\nDin data lagras säkert i vår databas och är endast tillgänglig för Quote Vectors plattformsteam.\n\nVi delar, säljer eller överför inte din personliga information till tredje part.\n\nNär quotevector.com lanseras kommer all personlig information som tillhör användare som inte blir aktiva prenumeranter att permanent raderas från vår databas.\n\nGenom att skicka in detta formulär samtycker du till insamling och användning av dina uppgifter enligt ovan.\n\nHar du frågor om dina uppgifter, kontakta oss på qv.dev@outlook.com.`,
+    privacyBody: `Vi samlar in ditt namn, företagsuppgifter, e-post, telefonnummer och offertvanor enbart för att bedöma ditt intresse för Quote Vector och för att kontakta dig om tidig åtkomst.\n\nDin data lagras säkert i vår databas och är endast tillgänglig för Quote Vectors plattformsteam.\n\nVi delar, säljer eller överför inte din personliga information till tredje part.\n\nNär quotevector.com lanseras kommer all personlig information som tillhör användare som inte blir aktiva prenumeranter att permanent raderas från vår databas.\n\nGenom att skicka in detta formulär samtycker du till insamling och användning av dina uppgifter enligt ovan.`,
+    privacyContact: "Kontakta oss",
     privacyClose: "Stäng",
   },
 };
@@ -906,6 +908,9 @@ onBeforeUnmount(() => {
         <h2 class="modal-title">{{ t.privacyTitle }}</h2>
         <div class="modal-body">
           <p v-for="(para, i) in t.privacyBody.split('\\n\\n')" :key="i">{{ para }}</p>
+          <p class="modal-contact">
+            <a href="mailto:qv.dev@outlook.com">{{ t.privacyContact }}</a>
+          </p>
         </div>
         <button class="modal-close-btn" @click="showPrivacyPolicy = false">
           {{ t.privacyClose }}
@@ -2281,6 +2286,16 @@ button {
 
 .modal-body p:last-child {
   margin-bottom: 0;
+}
+
+.modal-contact a {
+  color: #22c868;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.modal-contact a:hover {
+  color: #2ee87a;
 }
 
 .modal-body-text {
